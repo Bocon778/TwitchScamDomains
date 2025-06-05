@@ -15,6 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT }}
 
       - name: Extract domain from issue
         id: extract
@@ -33,6 +35,8 @@ jobs:
             gh issue close ${{ github.event.issue.number }}
             exit 0
           fi
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}
 
       - name: Add and sort domain in list.json
         run: |
@@ -49,7 +53,7 @@ jobs:
           git commit -m "Add ${{ steps.extract.outputs.domain }} from issue #${{ github.event.issue.number }}"
           git push --force origin $BRANCH
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT }}
 
       - name: Create pull request
         run: |
@@ -59,4 +63,4 @@ jobs:
             --base main \
             --head "add-domain-${{ github.event.issue.number }}"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
