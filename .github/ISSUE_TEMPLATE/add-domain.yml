@@ -3,6 +3,16 @@ description: Suggest a scam domain to add to the list.
 title: "[Add Domain] "
 labels: ["add-domain"]
 body:
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      description: Please confirm these items before submitting your request
+      options:
+        - label: I have checked that this domain is not already in the list.
+          required: true
+        - label: I understand that submitting a domain does not guarantee its addition to the list.
+          required: true
   - type: input
     id: domain
     attributes:
@@ -16,6 +26,6 @@ body:
     attributes:
       label: Context (Optional)
       description: "Any proof or reason why this domain is a scam?"
-      placeholder: "Seen in phishing emails, impersonating..."
+      placeholder: "Please provide any relevant details or context."
     validations:
       required: false
