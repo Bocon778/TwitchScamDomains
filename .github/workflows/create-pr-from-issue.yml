@@ -25,27 +25,25 @@ jobs:
 
       - name: Extract domain and update list.json
         run: |
-          DOMAIN=$(echo "${{ github.event.issue.body }}" | grep -Eo '([a-z0-9.-]+\.[a-z]{2,})' | head -n1 | tr '[:upper:]' '[:lower:]')
-          echo "Domain found: $DOMAIN"
+            DOMAIN=$(echo "${{ github.event.issue.body }}" | grep -Eo '([a-z0-9.-]+\.[a-z]{2,})' | head -n1 | tr '[:upper:]' '[:lower:]')
+            echo "Domain found: $DOMAIN"
 
-          if jq --arg d "$DOMAIN" '. | index($d)' list.json | grep -qv null; then
-            echo "Domain already exists."
-            gh issue comment ${{ github.event.issue.number }} --body "❌ \`$DOMAIN\` already exists in the list."
-            gh issue close ${{ github.event.issue.number }}
-            exit 0
-          fi
+            if jq --arg d "$DOMAIN" '.domains | index($d)' list.json | grep -qv null; then
+              echo "Domain already exists."
+              gh issue comment ${{ github.event.issue.number }} --body "❌ \`$DOMAIN\` already exists in the list."
+              gh issue close ${{ github.event.issue.number }}
+              exit 0
+            fi
 
-          jq --arg d "$DOMAIN" '. + [$d] | sort' list.json > list.json.tmp && mv list.json.tmp list.json
+            jq --arg d "$DOMAIN" '.domains += [$d] | .domains |= sort | {domains: .domains}' list.json > list.json.tmp && mv list.json.tmp list.json
+            git config user.name "github-actions"
+            git config user.email "github-actions@github.com"
 
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-
-          BRANCH="add-domain-${{ github.event.issue.number }}"
-          git checkout -b $BRANCH
-          git add list.json
-          git commit -m "Add $DOMAIN from issue #${{ github.event.issue.number }}"
-          git push origin $BRANCH
-
-          gh pr create --title "Add $DOMAIN" --body "Closes #${{ github.event.issue.number }}" --base main --head $BRANCH
+            BRANCH="add-domain-${{ github.event.issue.number }}"
+            git checkout -b $BRANCH
+            git add list.json
+            git commit -m "Add $DOMAIN from issue #${{ github.event.issue.number }}"
+            git push origin $BRANCH 
+            gh pr create --title "Add $DOMAIN" --body "Closes #${{ github.event.issue.number }}" --base main --head $BRANCH
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
