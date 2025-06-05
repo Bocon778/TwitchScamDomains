@@ -4,12 +4,15 @@ on:
   issues:
     types: [opened]
 
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
 jobs:
   add-domain:
-    if: github.event.issue.title == 'Add Domain'
+    if: contains(github.event.issue.labels.*.name, 'add-domain')
     runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ secrets.PAT }}
     steps:
       - uses: actions/checkout@v3
 
@@ -43,8 +46,10 @@ jobs:
           BRANCH="add-domain-${{ github.event.issue.number }}"
           git checkout -b $BRANCH
           git add list.json
-          git commit -m "Add $DOMAIN from issue #${{ github.event.issue.number }}"
+          git commit -m "Add ${{ steps.extract.outputs.domain }} from issue #${{ github.event.issue.number }}"
           git push --force origin $BRANCH
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create pull request
         run: |
@@ -53,3 +58,5 @@ jobs:
             --body "Closes #${{ github.event.issue.number }}" \
             --base main \
             --head "add-domain-${{ github.event.issue.number }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
