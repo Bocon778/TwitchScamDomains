@@ -23,5 +23,4 @@ jobs:
       - name: Ensure list is sorted A-Z
         run: |
           diff <(jq -c 'sort' list.json) <(jq -c '.' list.json) \
-          && echo "✅ list.json is sorted." \
           || (echo "❌ list.json is not sorted."; exit 1)
