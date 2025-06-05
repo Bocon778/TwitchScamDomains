@@ -1,49 +1,55 @@
-name: Create PR from Domain Issue
+name: Create PR from Issue
 
 on:
   issues:
     types: [opened]
 
 jobs:
-  create-pr:
-    if: contains(github.event.issue.labels.*.name, 'add-domain')
+  add-domain:
+    if: github.event.issue.title == 'Add Domain'
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: write
-      issues: write
-      pull-requests: write
-
+    env:
+      GH_TOKEN: ${{ secrets.PAT }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Extract domain and update list.json
+      - name: Extract domain from issue
+        id: extract
         run: |
-            DOMAIN=$(echo "${{ github.event.issue.body }}" | grep -Eo '([a-z0-9.-]+\.[a-z]{2,})' | head -n1 | tr '[:upper:]' '[:lower:]')
-            echo "Domain found: $DOMAIN"
+          DOMAIN=$(echo "${{ github.event.issue.body }}" | grep -Eo '([a-z0-9.-]+\.[a-z]{2,})' | head -n1 | tr '[:upper:]' '[:lower:]')
+          echo "Domain found: $DOMAIN"
+          echo "domain=$DOMAIN" >> $GITHUB_OUTPUT
 
-            if jq --arg d "$DOMAIN" '.domains | index($d)' list.json | grep -qv null; then
-              echo "Domain already exists."
-              gh issue comment ${{ github.event.issue.number }} --body "❌ \`$DOMAIN\` already exists in the list."
-              gh issue close ${{ github.event.issue.number }}
-              exit 0
-            fi
+      - name: Check if domain already exists
+        id: exists
+        run: |
+          DOMAIN="${{ steps.extract.outputs.domain }}"
+          if jq --arg d "$DOMAIN" 'index($d)' list.json | grep -qv null; then
+            echo "Domain already exists"
+            gh issue comment ${{ github.event.issue.number }} --body "❌ \`$DOMAIN\` already exists in the list."
+            gh issue close ${{ github.event.issue.number }}
+            exit 0
+          fi
 
-            jq --arg d "$DOMAIN" '. + [$d] | sort' list.json > list.json.tmp && mv list.json.tmp list.json
-            git config user.name "github-actions"
-            git config user.email "github-actions@github.com"
+      - name: Add and sort domain in list.json
+        run: |
+          DOMAIN="${{ steps.extract.outputs.domain }}"
+          jq --arg d "$DOMAIN" '. + [$d] | sort' list.json > list.json.tmp && mv list.json.tmp list.json
 
-            BRANCH="add-domain-${{ github.event.issue.number }}"
-            git checkout -b $BRANCH
-            git add list.json
-            git commit -m "Add $DOMAIN from issue #${{ github.event.issue.number }}"
-            git push origin $BRANCH 
-            gh pr create --title "Add $DOMAIN" --body "Closes #${{ github.event.issue.number }}" --base main --head $BRANCH
-        env:
-          GH_TOKEN: ${{ secrets.PAT }}
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          BRANCH="add-domain-${{ github.event.issue.number }}"
+          git checkout -b $BRANCH
+          git add list.json
+          git commit -m "Add $DOMAIN from issue #${{ github.event.issue.number }}"
+          git push --force origin $BRANCH
+
+      - name: Create pull request
+        run: |
+          gh pr create \
+            --title "Add ${{ steps.extract.outputs.domain }}" \
+            --body "Closes #${{ github.event.issue.number }}" \
+            --base main \
+            --head "add-domain-${{ github.event.issue.number }}"
