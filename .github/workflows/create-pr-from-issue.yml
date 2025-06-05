@@ -35,7 +35,7 @@ jobs:
               exit 0
             fi
 
-            jq --arg d "$DOMAIN" '.domains += [$d] | .domains |= sort | {domains: .domains}' list.json > list.json.tmp && mv list.json.tmp list.json
+            jq --arg d "$DOMAIN" '.domains += [$d] | {domains: (.domains | sort)}' list.json > list.json.tmp && mv list.json.tmp list.json
             git config user.name "github-actions"
             git config user.email "github-actions@github.com"
 
