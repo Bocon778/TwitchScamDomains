@@ -1,7 +1,13 @@
 ![Entries](https://img.shields.io/badge/dynamic/json?color=blue&label=entries&query=$.length&url=https%3A%2F%2Fraw.githubusercontent.com%2FBocon778%2FTwitchScamDomains%2Fmain%2Flist.json)
 
-# Twitch Scam Domains
+> **Note:**  
+> This list is not comprehensive; it only includes scam domains I have personally encountered.  
+> For more extensive resources and scam link databases, see:  
+> - [Phishing.Database](https://github.com/Phishing-Database/Phishing.Database)  
+> - [Scam-Blocklist](https://github.com/jarelllama/Scam-Blocklist)  
+> - [Discord-AntiScam/scam-links](https://github.com/Discord-AntiScam/scam-links)
 
+# Twitch Scam Domains
 A curated list of known scam domains used by malicious Twitch bots. This repository helps protect Twitch streamers and their communities from phishing attempts and other scams.
 
 ## Contributing
